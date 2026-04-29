@@ -1,10 +1,14 @@
-name: Checkout repository with LFS config
-description: Read .lfsconfig from the calling repository and run actions/checkout with the resolved Git LFS endpoint
+name: Checkout repository
+description: Run actions/checkout with optional custom Git LFS endpoint resolution from .lfsconfig
 
 inputs:
   github-token:
-    description: GitHub token for gh api
-    required: true
+    description: GitHub token for gh api. Required when lfs is true.
+    required: false
+  lfs:
+    description: Whether to enable Git LFS and resolve a custom endpoint from .lfsconfig
+    required: false
+    default: "false"
   clean:
     description: Whether to execute git clean before creating or resetting the repository
     required: false
@@ -20,18 +24,23 @@ inputs:
 
 outputs:
   lfs-url:
-    description: LFS endpoint URL from .lfsconfig
+    description: LFS endpoint URL from .lfsconfig when lfs is enabled
     value: ${{ steps.read-lfs-config.outputs.lfs-url }}
 
 runs:
   using: composite
   steps:
     - name: Read LFS config
+      if: ${{ inputs.lfs == 'true' }}
       id: read-lfs-config
       shell: pwsh
       env:
         GH_TOKEN: ${{ inputs.github-token }}
       run: |
+        if (-not $env:GH_TOKEN) {
+          throw "github-token is required when lfs is true."
+        }
+
         $content = gh api "repos/$env:GITHUB_REPOSITORY/contents/.lfsconfig?ref=$env:GITHUB_SHA" --jq .content
 
         # GitHub's Contents API may wrap base64 content with line breaks, so strip all whitespace before decoding.
@@ -45,7 +54,8 @@ runs:
 
         "lfs-url=$($match.Groups[1].Value)" >> $env:GITHUB_OUTPUT
 
-    - name: Checkout
+    - name: Checkout with LFS
+      if: ${{ inputs.lfs == 'true' }}
       uses: actions/checkout@v6
       env:
         GIT_CONFIG_COUNT: 2
@@ -56,5 +66,14 @@ runs:
       with:
         clean: ${{ inputs.clean }}
         lfs: true
+        persist-credentials: ${{ inputs.persist-credentials }}
+        submodules: ${{ inputs.submodules }}
+
+    - name: Checkout
+      if: ${{ inputs.lfs != 'true' }}
+      uses: actions/checkout@v6
+      with:
+        clean: ${{ inputs.clean }}
+        lfs: false
         persist-credentials: ${{ inputs.persist-credentials }}
         submodules: ${{ inputs.submodules }}
