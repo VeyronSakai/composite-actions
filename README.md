@@ -9,15 +9,14 @@ This repository hosts reusable composite actions that are shared across multiple
 | Path | Description | Outputs |
 | --- | --- | --- |
 | `git/config` | Reads `.lfsconfig` from the calling repository with `gh api` and extracts the Git LFS endpoint URL. | `lfs-url` |
+| `git/checkout` | Reads `.lfsconfig`, injects the resolved LFS endpoint into `GIT_CONFIG_*`, and runs `actions/checkout@v6`. | `lfs-url` |
 
 ## Usage
 
 ```yaml
-- name: Read LFS config
-  id: read-lfs-config
-  uses: VeyronSakai/actions/git/config@<ref>
+- uses: VeyronSakai/actions/git/checkout@<ref>
   with:
     github-token: ${{ github.token }}
 ```
 
-Use the returned `lfs-url` output to populate `GIT_CONFIG_*` environment variables for a later `actions/checkout` step when the repository uses a custom Git LFS endpoint.
+Use `git/checkout` when the calling repository needs `actions/checkout` to respect a custom Git LFS endpoint from `.lfsconfig`.

@@ -1,0 +1,60 @@
+name: Checkout repository with LFS config
+description: Read .lfsconfig from the calling repository and run actions/checkout with the resolved Git LFS endpoint
+
+inputs:
+  github-token:
+    description: GitHub token for gh api
+    required: true
+  clean:
+    description: Whether to execute git clean before creating or resetting the repository
+    required: false
+    default: "true"
+  persist-credentials:
+    description: Whether to configure the token or SSH key with the local git config
+    required: false
+    default: "true"
+  submodules:
+    description: Whether to checkout submodules. false, true, or recursive
+    required: false
+    default: "false"
+
+outputs:
+  lfs-url:
+    description: LFS endpoint URL from .lfsconfig
+    value: ${{ steps.read-lfs-config.outputs.lfs-url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Read LFS config
+      id: read-lfs-config
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        $content = gh api "repos/$env:GITHUB_REPOSITORY/contents/.lfsconfig?ref=$env:GITHUB_SHA" --jq .content
+
+        # GitHub's Contents API may wrap base64 content with line breaks, so strip all whitespace before decoding.
+        $lfsConfig = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(($content -replace '\s', '')))
+
+        # (?m) enables multi-line mode, then this pattern finds the `url = ...` line while tolerating surrounding spaces and captures only the URL value.
+        $match = [regex]::Match($lfsConfig, '(?m)^\s*url\s*=\s*(.+?)\s*$')
+        if (-not $match.Success) {
+          throw "lfs.url was not found in .lfsconfig."
+        }
+
+        "lfs-url=$($match.Groups[1].Value)" >> $env:GITHUB_OUTPUT
+
+    - name: Checkout
+      uses: actions/checkout@v6
+      env:
+        GIT_CONFIG_COUNT: 2
+        GIT_CONFIG_KEY_0: lfs.url
+        GIT_CONFIG_VALUE_0: ${{ steps.read-lfs-config.outputs.lfs-url }}
+        GIT_CONFIG_KEY_1: remote.origin.lfsurl
+        GIT_CONFIG_VALUE_1: ${{ steps.read-lfs-config.outputs.lfs-url }}
+      with:
+        clean: ${{ inputs.clean }}
+        lfs: true
+        persist-credentials: ${{ inputs.persist-credentials }}
+        submodules: ${{ inputs.submodules }}
