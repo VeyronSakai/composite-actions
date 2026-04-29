@@ -10,9 +10,9 @@ inputs:
     required: false
     default: "false"
   clean:
-    description: Whether to execute git clean before creating or resetting the repository
+    description: Whether to run git clean -df and git reset --hard HEAD after checkout
     required: false
-    default: "true"
+    default: "false"
   persist-credentials:
     description: Whether to configure the token or SSH key with the local git config
     required: false
@@ -64,7 +64,7 @@ runs:
         GIT_CONFIG_KEY_1: remote.origin.lfsurl
         GIT_CONFIG_VALUE_1: ${{ steps.read-lfs-config.outputs.lfs-url }}
       with:
-        clean: ${{ inputs.clean }}
+        clean: false
         lfs: true
         persist-credentials: ${{ inputs.persist-credentials }}
         submodules: ${{ inputs.submodules }}
@@ -73,7 +73,14 @@ runs:
       if: ${{ inputs.lfs != 'true' }}
       uses: actions/checkout@v6
       with:
-        clean: ${{ inputs.clean }}
+        clean: false
         lfs: false
         persist-credentials: ${{ inputs.persist-credentials }}
         submodules: ${{ inputs.submodules }}
+
+    - name: Clean workspace
+      if: ${{ inputs.clean == 'true' }}
+      shell: pwsh
+      run: |
+        git clean -df
+        git reset --hard HEAD
