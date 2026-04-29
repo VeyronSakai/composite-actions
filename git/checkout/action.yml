@@ -10,7 +10,7 @@ inputs:
     required: false
     default: "false"
   clean:
-    description: Deprecated compatibility input. Worktree cleanup now always runs after checkout.
+    description: Whether to use actions/checkout clean before creating or resetting the repository
     required: false
     default: "false"
   persist-credentials:
@@ -64,7 +64,7 @@ runs:
         GIT_CONFIG_KEY_1: remote.origin.lfsurl
         GIT_CONFIG_VALUE_1: ${{ steps.read-lfs-config.outputs.lfs-url }}
       with:
-        clean: false
+        clean: ${{ inputs.clean }}
         lfs: true
         persist-credentials: ${{ inputs.persist-credentials }}
         submodules: ${{ inputs.submodules }}
@@ -73,7 +73,7 @@ runs:
       if: ${{ inputs.lfs != 'true' }}
       uses: actions/checkout@v6
       with:
-        clean: false
+        clean: ${{ inputs.clean }}
         lfs: false
         persist-credentials: ${{ inputs.persist-credentials }}
         submodules: ${{ inputs.submodules }}
