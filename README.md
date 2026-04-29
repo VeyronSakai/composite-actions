@@ -1,4 +1,4 @@
-# composite-actions
+# actions
 
 Shared GitHub Actions for VeyronSakai repositories.
 
@@ -15,7 +15,7 @@ This repository hosts reusable composite actions that are shared across multiple
 ```yaml
 - name: Read LFS config
   id: read-lfs-config
-  uses: VeyronSakai/composite-actions/git/config@<ref>
+  uses: VeyronSakai/actions/git/config@<ref>
   with:
     github-token: ${{ github.token }}
 ```
