@@ -8,14 +8,14 @@ This repository hosts reusable composite actions that are shared across multiple
 
 | Path | Description | Outputs |
 | --- | --- | --- |
-| `.github/actions/git/config` | Reads `.lfsconfig` from the calling repository with `gh api` and extracts the Git LFS endpoint URL. | `lfs-url` |
+| `git/config` | Reads `.lfsconfig` from the calling repository with `gh api` and extracts the Git LFS endpoint URL. | `lfs-url` |
 
 ## Usage
 
 ```yaml
 - name: Read LFS config
   id: read-lfs-config
-  uses: VeyronSakai/composite-actions/.github/actions/git/config@<ref>
+  uses: VeyronSakai/composite-actions/git/config@<ref>
   with:
     github-token: ${{ github.token }}
 ```
