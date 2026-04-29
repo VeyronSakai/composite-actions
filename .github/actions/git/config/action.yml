@@ -1,0 +1,34 @@
+name: Read LFS config
+description: Read .lfsconfig from GitHub and extract lfs.url
+
+inputs:
+  github-token:
+    description: GitHub token for gh api
+    required: true
+
+outputs:
+  lfs-url:
+    description: LFS endpoint URL from .lfsconfig
+    value: ${{ steps.read-lfs-config.outputs.lfs-url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Read LFS config
+      id: read-lfs-config
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        $content = gh api "repos/$env:GITHUB_REPOSITORY/contents/.lfsconfig?ref=$env:GITHUB_SHA" --jq .content
+
+        # GitHub's Contents API may wrap base64 content with line breaks, so strip all whitespace before decoding.
+        $lfsConfig = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(($content -replace '\s', '')))
+
+        # (?m) enables multi-line mode, then this pattern finds the `url = ...` line while tolerating surrounding spaces and captures only the URL value.
+        $match = [regex]::Match($lfsConfig, '(?m)^\s*url\s*=\s*(.+?)\s*$')
+        if (-not $match.Success) {
+          throw "lfs.url was not found in .lfsconfig."
+        }
+
+        "lfs-url=$($match.Groups[1].Value)" >> $env:GITHUB_OUTPUT
