@@ -1,4 +1,4 @@
-# github-actions
+# game-actions
 
 Shared GitHub Actions for VeyronSakai repositories.
 
