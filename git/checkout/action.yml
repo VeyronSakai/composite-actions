@@ -10,7 +10,7 @@ inputs:
     required: false
     default: "false"
   clean:
-    description: Whether to run git clean -df and git reset --hard HEAD after checkout
+    description: Deprecated compatibility input. Worktree cleanup now always runs after checkout.
     required: false
     default: "false"
   persist-credentials:
@@ -79,7 +79,6 @@ runs:
         submodules: ${{ inputs.submodules }}
 
     - name: Clean workspace
-      if: ${{ inputs.clean == 'true' }}
       shell: pwsh
       run: |
         git clean -df
