@@ -19,7 +19,7 @@ This repository hosts reusable composite actions that are shared across multiple
     lfs: "false"
 ```
 
-`git/checkout` now always runs `git clean -df` and `git reset --hard HEAD` after checkout. The old `clean` input is kept only for backward compatibility.
+`git/checkout` always runs `git clean -df` and `git reset --hard HEAD` after checkout. `clean` is also passed through to `actions/checkout` itself.
 
 Enable `lfs: "true"` when the calling repository needs `actions/checkout` to respect a custom Git LFS endpoint from `.lfsconfig`. In that case, also pass `github-token`.
 
