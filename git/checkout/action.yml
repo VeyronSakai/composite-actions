@@ -3,7 +3,7 @@ description: Run actions/checkout with optional custom Git LFS endpoint resoluti
 
 inputs:
   github-token:
-    description: GitHub token for gh api. Required when lfs is true.
+    description: GitHub token for gh api and actions/checkout. Required when lfs is true.
     required: false
   lfs:
     description: Whether to enable Git LFS and resolve a custom endpoint from .lfsconfig
@@ -68,6 +68,7 @@ runs:
         lfs: true
         persist-credentials: ${{ inputs.persist-credentials }}
         submodules: ${{ inputs.submodules }}
+        token: ${{ inputs.github-token || github.token }}
 
     - name: Checkout
       if: ${{ inputs.lfs != 'true' }}
@@ -77,6 +78,7 @@ runs:
         lfs: false
         persist-credentials: ${{ inputs.persist-credentials }}
         submodules: ${{ inputs.submodules }}
+        token: ${{ inputs.github-token || github.token }}
 
     - name: Clean workspace
       shell: pwsh
